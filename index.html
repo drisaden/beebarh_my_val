@@ -1,15 +1,460 @@
-<!DOCTYPE html> <html lang="en">
-
+<!DOCTYPE html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Will You Be My Valentine 💖</title>
 
-<meta charset="UTF-8">
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+    }
+    .hide-for-screenshot {
+  visibility: hidden !important;
+}
+.card {
+  position: absolute;
+  inset: 0;
+  border-radius: 1rem;
+  overflow: hidden;
+  background: white;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+will-change: transform;
+  transition:
+    transform 0.4s cubic-bezier(.22,.61,.36,1),
+    box-shadow 0.3s ease,
+    opacity 0.3s ease;
+}
 
-<meta name="viewport" content="width=device-width,
+.card:active {
+  cursor: grabbing;
+}
 
-initial-scale=1.0">
+.card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.lock-ui {
+  pointer-events: none;
+}
 
-<title>Document Title</title> </head> 
-  <body>
-    <h1>Hello Beebarh</h1>
-  </body>
+#cameraFlash {
+  position: fixed;
+  inset: 0;
+  background: white;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+.flash {
+  animation: flashAnim 0.12s ease-out;
+}
+
+@keyframes flashAnim {
+  from { opacity: 0.9; }
+  to { opacity: 0; }
+}
+
+.toast-show {
+  opacity: 1 !important;
+  transform: translate(-50%, -10px);
+}
+</style>
+</head>
+
+<body class="bg-gradient-to-br from-pink-200 to-red-300 min-h-screen flex items-center justify-center overflow-hidden">
+  
+<audio id="loveSong" loop>
+  <source src="love-song.mp3" type="audio/mpeg">
+</audio>
+  <!-- MAIN CONTENT -->
+  <section id="main" class="text-center space-y-8">
+  <h1 id="question"
+  class="text-4xl md:text-5xl font-bold text-white drop-shadow transition-all duration-300">
+  Habeebah, Will you be my Valentine? 💕
+</h1>
+
+    <div class="text-7xl animate-pulse">❤️</div>
+
+    <!-- Buttons: normal on load -->
+    <div id="buttonWrapper" class="flex justify-center gap-6 relative">
+      <button id="yesBtn"
+        class="px-8 py-4 bg-red-500 hover:bg-red-600 text-white text-xl rounded-full shadow-lg transition">
+        Yes 💘
+      </button>
+
+      <button id="noBtn"
+        class="px-8 py-4 bg-gray-400 text-white text-xl rounded-full shadow-lg transition">
+        No 🙄
+      </button>
+    </div>
+  </section>
+
+  <!-- UNESCAPABLE MODAL -->
+  <div id="modal"
+    class="fixed inset-0 hidden z-50 bg-gradient-to-br from-pink-500 to-red-600 flex items-center justify-center">
+
+    <div id="captureArea" class="text-center text-white space-y-6 px-6">
+      <h2 class="text-5xl font-bold"> Yayy!!! She said YES 😍💖</h2>
+  <p class="text-xl max-w-md mx-auto">You just made me the happiest person alive. 🎆💞🥰🎉</p>
+
+  <!-- CARD STACK -->
+<div id="cardStack"
+  class="relative w-72 h-96 mx-auto mt-4">
+
+  <div class="card">
+    <img src="photo1.jpg" crossorigin="anonymous" />
+  </div>
+
+  <div class="card">
+    <img src="photo2.jpg" crossorigin="anonymous"/>
+  </div>
+
+  <div class="card">
+    <img src="photo3.jpg" crossorigin="anonymous"/>
+  </div>
+
+  <div class="card">
+    <img src="photo4.jpg" crossorigin="anonymous"/>
+  </div>
+
+</div>
+
+  <p class="text-lg">Forever starts now ❤️🌹</p>
+
+  <!-- Share Button -->
+<!--  <button id="shareBtn"
+    class="px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-full">
+    Tap here to screenshot this page and send it to me on WhatsApp
+  </button>-->
+</div>
+</div>
+
+<div id="hearts"></div>
+<!-- CAMERA FLASH -->
+<div id="cameraFlash"
+  class="fixed inset-0 bg-white opacity-0 pointer-events-none z-[9999]"></div>
+
+<!-- TOAST -->
+<!--<div id="toast"
+  class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-black/80 text-white px-4 py-2 rounded-lg opacity-0 transition-opacity z-[9999]">
+  Screenshot saved 📸
+</div>-->
+<style>
+  .heart {
+    position: fixed;
+    bottom: -20px;
+    font-size: 24px;
+    animation: floatUp 6s linear infinite;
+    opacity: 0.8;
+  }
+
+  @keyframes floatUp {
+    from {
+      transform: translateY(0) scale(1);
+      opacity: 1;
+    }
+    to {
+      transform: translateY(-110vh) scale(1.5);
+      opacity: 0;
+    }
+  }
+</style>
+  <!-- SCRIPT -->
+  <script>
+  function waitForImages(container) {
+    const images = [...container.querySelectorAll("img")];
+
+    return Promise.all(
+      images.map(img =>
+        img.complete
+          ? Promise.resolve()
+          : new Promise(res => {
+              img.onload = img.onerror = res;
+            })
+      )
+    );
+  }
+</script>
+<script>
+  const noBtn = document.getElementById("noBtn");
+  const yesBtn = document.getElementById("yesBtn");
+
+  const question = document.getElementById("question");
+
+  let noHasMoved = false;
+  let noClickCount = 0;
+
+  const MAX_NO_CLICKS = 9; // ← final NO click happens here
+  let yesScale = 1;
+
+  const persuasionTexts = [
+    "Will you be my Valentine? 💕",
+    "Are you sure? 🥺",
+    "Come on… it’ll be cute 😌",
+    "I promise I’ll treat you right 💖",
+    "Why are you running 😭",
+    "This YES button is looking nice though 👀",
+    "Just imagine saying yes 😍",
+    "Okay now you’re playing hard to get 😏",
+    "Last chance… my heart can’t take this 💔",
+    "Alright. Destiny has spoken 🌹"
+  ];
+
+  noBtn.addEventListener("click", () => {
+    noClickCount++;
+
+    // First NO click → allow movement
+    if (!noHasMoved) {
+      noHasMoved = true;
+      noBtn.style.position = "fixed";
+    }
+
+    // FINAL NO CLICK
+    if (noClickCount >= MAX_NO_CLICKS) {
+      finalNoState();
+      return;
+    }
+
+    moveNoButton();
+    updateText();
+    growYesButton();
+  });
+
+  function moveNoButton() {
+    const padding = 20;
+    const btnWidth = noBtn.offsetWidth;
+    const btnHeight = noBtn.offsetHeight;
+
+    const maxX = window.innerWidth - btnWidth - padding;
+    const maxY = window.innerHeight - btnHeight - padding;
+
+    const x = Math.random() * maxX;
+    const y = Math.random() * maxY;
+
+    noBtn.style.left = `${x}px`;
+    noBtn.style.top = `${y}px`;
+  }
+
+  function updateText() {
+    const index = Math.min(noClickCount, persuasionTexts.length - 1);
+    question.textContent = persuasionTexts[index];
+  }
+
+  function growYesButton() {
+    yesScale += 0.08; // growth speed
+    yesBtn.style.transform = `scale(${yesScale})`;
+  }
+
+  function finalNoState() {
+    question.textContent = "You tried… but we both know the answer 💘";
+
+    noBtn.disabled = true;
+    noBtn.style.opacity = "0.4";
+    noBtn.style.cursor = "not-allowed";
+
+    // One last YES growth for emphasis
+    yesScale += 0.15;
+    yesBtn.style.transform = `scale(${yesScale})`;
+
+    // Optional: slight pulse to attract attention
+    yesBtn.classList.add("animate-pulse");
+  }
+
+  yesBtn.addEventListener("click", () => {
+  let modal = document.getElementById("modal");
+  flowerSplash();        // 🌸 SPLASH FIRST
+  modal.classList.remove("hidden");
+    modal.classList.add("flex");
+
+    // (Optional) prevent background scroll
+    document.body.style.overflow = "hidden";
+});
+
+//Love song
+  const song = document.getElementById("loveSong");
+  const heartsContainer = document.getElementById("hearts");
+  const slide = document.getElementById("slide");
+//  const shareBtn = document.getElementById("shareBtn");
+
+  // 🎵 Play music on YES
+  yesBtn.addEventListener("click", () => {
+    song.play();
+    startHearts();
+  });
+
+  // 💕 Floating hearts
+  function startHearts() {
+    setInterval(() => {
+      const heart = document.createElement("div");
+      heart.className = "heart";
+      heart.innerHTML = "💖";
+      heart.style.left = Math.random() * 100 + "vw";
+      heart.style.animationDuration = (4 + Math.random() * 3) + "s";
+      heartsContainer.appendChild(heart);
+
+      setTimeout(() => heart.remove(), 7000);
+    }, 300);
+  }
+  
+  const stack = document.getElementById("cardStack");
+  let cards = Array.from(stack.children);
+
+  const SWIPE_DISTANCE = 110;
+  const FLICK_VELOCITY = 0.45; // momentum threshold
+
+  let startX = 0;
+  let lastX = 0;
+  let lastTime = 0;
+  let velocity = 0;
+  let dragging = false;
+
+  function layoutCards() {
+    cards.forEach((card, i) => {
+      card.style.zIndex = cards.length - i;
+
+      const xOffset = i * 6;   // 👈 X stack visibility
+      const yOffset = i * 10;  // 👈 Y stack visibility
+      const scale = 1 - i * 0.045;
+      const rotate = i * -1.5;
+
+      card.style.transform = `
+        translate(${xOffset}px, ${yOffset}px)
+        scale(${scale})
+        rotate(${rotate}deg)
+      `;
+
+      card.style.opacity = i > 4 ? 0 : 1;
+    });
+  }
+
+  layoutCards();
+
+  function attachSwipe(card) {
+    card.addEventListener("pointerdown", e => {
+      dragging = true;
+      startX = e.clientX;
+      lastX = startX;
+      lastTime = Date.now();
+      velocity = 0;
+
+      card.setPointerCapture(e.pointerId);
+      card.style.transition = "none";
+    });
+
+    card.addEventListener("pointermove", e => {
+      if (!dragging) return;
+
+      const now = Date.now();
+      const dx = e.clientX - lastX;
+      const dt = now - lastTime || 1;
+
+      velocity = dx / dt;
+      lastX = e.clientX;
+      lastTime = now;
+
+      const deltaX = e.clientX - startX;
+      const rotate = deltaX * 0.06;
+
+      card.style.transform = `
+        translateX(${deltaX}px)
+        rotate(${rotate}deg)
+      `;
+    });
+
+    card.addEventListener("pointerup", () => endSwipe(card));
+    card.addEventListener("pointercancel", () => endSwipe(card));
+  }
+
+  function endSwipe(card) {
+    if (!dragging) return;
+    dragging = false;
+
+    const totalMove = lastX - startX;
+    const shouldFlick =
+      Math.abs(totalMove) > SWIPE_DISTANCE ||
+      Math.abs(velocity) > FLICK_VELOCITY;
+
+    card.style.transition =
+      "transform 0.45s cubic-bezier(.22,.61,.36,1)";
+
+    if (shouldFlick) {
+      const direction = totalMove > 0 ? 1 : -1;
+      const flyX = direction * (window.innerWidth + 200);
+
+      card.style.transform = `
+        translateX(${flyX}px)
+        rotate(${direction * 30}deg)
+      `;
+
+      setTimeout(() => {
+        stack.appendChild(card);
+        cards = Array.from(stack.children);
+
+        card.style.transition = "none";
+        card.style.transform = "";
+
+        layoutCards();
+        attachSwipe(cards[0]);
+      }, 450);
+    } else {
+      layoutCards();
+    }
+  }
+
+  attachSwipe(cards[0]);
+
+
+</script>
+<script>
+  function flowerSplash() {
+    const duration = 1.2 * 1000;
+    const end = Date.now() + duration;
+
+    (function frame() {
+      confetti({
+        particleCount: 6,
+        angle: 60,
+        spread: 80,
+        origin: { x: 0 },
+        shapes: ['circle'],
+        colors: ['#ff69b4', '#ff1493', '#ffd1dc', '#ffffff']
+      });
+      confetti({
+        particleCount: 6,
+        angle: 120,
+        spread: 80,
+        origin: { x: 1 },
+        shapes: ['circle'],
+        colors: ['#ff69b4', '#ff1493', '#ffd1dc', '#ffffff']
+      });
+
+      if (Date.now() < end) {
+        requestAnimationFrame(frame);
+      }
+    })();
+
+    // Center burst (main congratulatory pop)
+    confetti({
+      particleCount: 120,
+      spread: 160,
+      startVelocity: 45,
+      gravity: 0.9,
+      scalar: 1.1,
+      ticks: 200,
+      shapes: ['circle'],
+      colors: ['#ff69b4', '#ff1493', '#ffd1dc', '#ffffff', '#f43f5e']
+    });
+  }
+</script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+</body>
 </html>
