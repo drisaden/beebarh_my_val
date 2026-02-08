@@ -67,7 +67,11 @@ will-change: transform;
     opacity: 0.9;
   }
 }
-
+#noBtn {
+  position: absolute;
+  left: 65%; /* or relative */
+  transition: transform 0.15s ease;
+}
 
 
 </style>
@@ -231,13 +235,30 @@ will-change: transform;
     updateText();
     growYesButton();
   };
-  
+  document.addEventListener("mousemove", e => {
+  console.log("mouse moving");
+});
   // Desktop → hover
-  noBtn.addEventListener("mouseenter", () => {
-    if (window.innerWidth >= 768) {
-      setTimeout(handleNoInteraction, 80);
-    }
-  });
+  // Desktop: dodge on mouse proximity
+document.addEventListener("mousemove", e => {
+  if (window.innerWidth > 768) return; // desktop only
+  if (noBtn.disabled) return;
+
+  const rect = noBtn.getBoundingClientRect();
+  const buffer = 80; // distance to trigger dodge
+
+  const mouseNear =
+    e.clientX > rect.left - buffer &&
+    e.clientX < rect.right + buffer &&
+    e.clientY > rect.top - buffer &&
+    e.clientY < rect.bottom + buffer;
+
+  if (mouseNear) {
+    const x = Math.random() * 240 - 120;
+    const y = Math.random() * 240 - 120;
+    noBtn.style.transform = `translate(${x}px, ${y}px)`;
+  }
+});
   
   // Mobile → click
   noBtn.addEventListener("click", () => {
