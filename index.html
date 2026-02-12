@@ -240,26 +240,24 @@ will-change: transform;
 });
   // Desktop → hover
   // Desktop: dodge on mouse proximity
-document.addEventListener("mousemove", e => {
-  if (window.innerWidth > 768) return; // desktop only
+  document.addEventListener("mousemove", e => {
+  if (window.innerWidth < 768) return; // desktop only
   if (noBtn.disabled) return;
 
   const rect = noBtn.getBoundingClientRect();
-  const buffer = 80; // distance to trigger dodge
+  const buffer = 100;
 
   const mouseNear =
-    e.clientX > rect.left - buffer &&
-    e.clientX < rect.right + buffer &&
-    e.clientY > rect.top - buffer &&
-    e.clientY < rect.bottom + buffer;
+    e.clientX >= rect.left - buffer &&
+    e.clientX <= rect.right + buffer &&
+    e.clientY >= rect.top - buffer &&
+    e.clientY <= rect.bottom + buffer;
 
   if (mouseNear) {
-    const x = Math.random() * 240 - 120;
-    const y = Math.random() * 240 - 120;
-    noBtn.style.transform = `translate(${x}px, ${y}px)`;
+    handleNoInteraction();
   }
 });
-  
+
   // Mobile → click
   noBtn.addEventListener("click", () => {
     if (window.innerWidth < 768) {
