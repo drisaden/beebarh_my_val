@@ -205,7 +205,7 @@ will-change: transform;
     "left 0.35s cubic-bezier(.22,.61,.36,1), top 0.35s cubic-bezier(.22,.61,.36,1)";
 
     // Android audio unlock fix
-const unlockAudio = () => {
+/*const unlockAudio = () => {
   song.play()
     .then(() => {
       song.pause();
@@ -218,9 +218,9 @@ const unlockAudio = () => {
 };
 
 document.addEventListener("click", unlockAudio);
-document.addEventListener("touchstart", unlockAudio);
+document.addEventListener("touchstart", unlockAudio);*/
 
-  /* ===========================
+  /* =========================== 
      CONFIG
   =========================== */
   const MAX_NO_CLICKS = 9;
@@ -378,46 +378,65 @@ document.addEventListener("touchstart", unlockAudio);
   };
 
   /* ===========================
-     MODAL SNOW (UNCHANGED)
-  =========================== */
-  const startModalSnow = () => {
-    if (snowInterval) return;
+   MODAL SNOW (MOBILE FIXED)
+=========================== */
+const startModalSnow = () => {
+  if (snowInterval) return;
 
-    const snowLayer = document.createElement("div");
-    snowLayer.id = "snowLayer";
-    snowLayer.style.position = "absolute";
-    snowLayer.style.inset = 0;
-    snowLayer.style.pointerEvents = "none";
-    snowLayer.style.zIndex = 0;
-    modal.appendChild(snowLayer);
+  const snowLayer = document.createElement("div");
+  snowLayer.id = "snowLayer";
 
-    const particles = ["❄️", "💕", "🌸"];
+  snowLayer.style.position = "absolute";
+  snowLayer.style.top = "0";
+  snowLayer.style.left = "0";
+  snowLayer.style.width = "100%";
+  snowLayer.style.height = "100%";
+  snowLayer.style.pointerEvents = "none";
+  snowLayer.style.overflow = "hidden";
+  snowLayer.style.zIndex = "0";
 
-    snowInterval = setInterval(() => {
-      const flake = document.createElement("div");
-      flake.textContent =
-        particles[Math.floor(Math.random() * particles.length)];
+  modal.appendChild(snowLayer);
 
-      const depth = Math.random();
-      const size = 12 + depth * 18;
-      const duration = 6 - depth * 3;
+  const particles = ["❄️", "💕", "🌸"];
 
-      flake.style.position = "absolute";
-      flake.style.left = Math.random() * 100 + "%";
-      flake.style.top = "-30px";
-      flake.style.fontSize = size + "px";
-      flake.style.opacity = 0.4 + depth * 0.6;
+  snowInterval = setInterval(() => {
+    const flake = document.createElement("div");
+    flake.textContent =
+      particles[Math.floor(Math.random() * particles.length)];
 
-      snowLayer.appendChild(flake);
+    const depth = Math.random();
+    const size = 14 + depth * 18;
+    const duration = 5 + Math.random() * 3;
 
-      flake.animate(
-        [{ transform: "translateY(0)" }, { transform: "translateY(110vh)" }],
-        { duration: duration * 1000, easing: "linear" }
-      );
+    flake.style.position = "absolute";
+    flake.style.left = Math.random() * 100 + "%";
+    flake.style.top = "-40px";
+    flake.style.fontSize = size + "px";
+    flake.style.opacity = 0.5 + depth * 0.5;
+    flake.style.willChange = "transform";
+    flake.style.transform = "translateY(0)";
 
-      setTimeout(() => flake.remove(), duration * 1000 + 500);
-    }, 180);
-  };
+    snowLayer.appendChild(flake);
+
+    // Use window.innerHeight instead of 110vh (fixes Android issue)
+    const fallDistance = window.innerHeight + 100;
+
+    flake.animate(
+      [
+        { transform: "translateY(0)" },
+        { transform: `translateY(${fallDistance}px)` }
+      ],
+      {
+        duration: duration * 1000,
+        easing: "linear"
+      }
+    );
+
+    setTimeout(() => {
+      flake.remove();
+    }, duration * 1000);
+  }, 200);
+};
 
   /* ===========================
      CARD STACK (UNCHANGED)
