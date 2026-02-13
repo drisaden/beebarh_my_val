@@ -80,9 +80,9 @@ will-change: transform;
 
 <body class="bg-gradient-to-br from-pink-200 to-red-300 min-h-screen flex items-center justify-center overflow-hidden">
   
-<audio id="loveSong" loop>
-  <source src="/ed_sheeran_perfect.mp3" type="audio/mp3">
-</audio>
+  <audio id="loveSong" loop preload="auto" playsinline>
+    <source src="ed_sheeran_perfect.mp3" type="audio/mpeg">
+  </audio>
   <!-- MAIN CONTENT -->
   <section id="main" class="text-center space-y-8">
   <h1 id="question"
@@ -173,6 +173,7 @@ will-change: transform;
   }
 </style>
 
+
 <script>
   /* ===========================
      UTILITIES
@@ -202,6 +203,22 @@ will-change: transform;
   // Smooth movement
   noBtn.style.transition =
     "left 0.35s cubic-bezier(.22,.61,.36,1), top 0.35s cubic-bezier(.22,.61,.36,1)";
+
+    // Android audio unlock fix
+const unlockAudio = () => {
+  song.play()
+    .then(() => {
+      song.pause();
+      song.currentTime = 0;
+    })
+    .catch(() => {});
+    
+  document.removeEventListener("click", unlockAudio);
+  document.removeEventListener("touchstart", unlockAudio);
+};
+
+document.addEventListener("click", unlockAudio);
+document.addEventListener("touchstart", unlockAudio);
 
   /* ===========================
      CONFIG
@@ -327,21 +344,21 @@ will-change: transform;
      YES BUTTON
   =========================== */
   yesBtn.addEventListener("click", async () => {
-    flowerSplash();
-    modal.classList.remove("hidden");
-    modal.classList.add("flex");
-    document.body.style.overflow = "hidden";
+  flowerSplash();
+  modal.classList.remove("hidden");
+  modal.classList.add("flex");
+  document.body.style.overflow = "hidden";
 
-    try {
-      song.currentTime = 0;
-      await song.play();
-    } catch (err) {
-      console.log("Audio blocked:", err);
-    }
+  try {
+    song.currentTime = 0;
+    await song.play();
+  } catch (err) {
+    console.log("Audio blocked:", err);
+  }
 
-    startHearts();
-    startModalSnow();
-  });
+  startHearts();
+  startModalSnow();
+});
 
   /* ===========================
      HEARTS
