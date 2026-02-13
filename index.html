@@ -216,6 +216,12 @@ will-change: transform;
   ];
   
   /* ===========================
+     INITIAL BUTTON STYLE
+  =========================== */
+  noBtn.style.transition = "left .25s ease, top .25s ease";
+  noBtn.style.position = "relative";
+  
+  /* ===========================
      NO BUTTON LOGIC
   =========================== */
   const handleNoInteraction = () => {
@@ -235,43 +241,70 @@ will-change: transform;
     updateText();
     growYesButton();
   };
-  document.addEventListener("mousemove", e => {
-  console.log("mouse moving");
-});
-  // Desktop → hover
-  // Desktop: dodge on mouse proximity
-  document.addEventListener("mousemove", e => {
-  if (window.innerWidth < 768) return; // desktop only
-  if (noBtn.disabled) return;
-
-  const rect = noBtn.getBoundingClientRect();
-  const buffer = 100;
-
-  const mouseNear =
-    e.clientX >= rect.left - buffer &&
-    e.clientX <= rect.right + buffer &&
-    e.clientY >= rect.top - buffer &&
-    e.clientY <= rect.bottom + buffer;
-
-  if (mouseNear) {
+  
+  /* -------- Desktop: must ACTUALLY hover -------- */
+  noBtn.addEventListener("mouseenter", () => {
+    if (window.innerWidth < 768) return;
+    if (noBtn.disabled) return;
     handleNoInteraction();
-  }
-});
-
-  // Mobile → click
+  });
+  
+  /* -------- Mobile: tap -------- */
   noBtn.addEventListener("click", () => {
     if (window.innerWidth < 768) {
       handleNoInteraction();
     }
   });
   
+  /* -------- Smart Move (no overlap + smooth) -------- */
   const moveNoButton = () => {
     const padding = 20;
-    const maxX = window.innerWidth - noBtn.offsetWidth - padding;
-    const maxY = window.innerHeight - noBtn.offsetHeight - padding;
   
-    noBtn.style.left = Math.random() * maxX + "px";
-    noBtn.style.top = Math.random() * maxY + "px";
+    const btnWidth = noBtn.offsetWidth;
+    const btnHeight = noBtn.offsetHeight;
+  
+    const questionRect = question.getBoundingClientRect();
+    const yesRect = yesBtn.getBoundingClientRect();
+  
+    const maxX = window.innerWidth - btnWidth - padding;
+    const maxY = window.innerHeight - btnHeight - padding;
+  
+    let x, y;
+    let valid = false;
+    let attempts = 0;
+  
+    while (!valid && attempts < 80) {
+      x = Math.random() * maxX + padding;
+      y = Math.random() * maxY + padding;
+  
+      const future = {
+        left: x,
+        right: x + btnWidth,
+        top: y,
+        bottom: y + btnHeight
+      };
+  
+      const overlapsQuestion =
+        future.right > questionRect.left &&
+        future.left < questionRect.right &&
+        future.bottom > questionRect.top &&
+        future.top < questionRect.bottom;
+  
+      const overlapsYes =
+        future.right > yesRect.left &&
+        future.left < yesRect.right &&
+        future.bottom > yesRect.top &&
+        future.top < yesRect.bottom;
+  
+      if (!overlapsQuestion && !overlapsYes) {
+        valid = true;
+      }
+  
+      attempts++;
+    }
+  
+    noBtn.style.left = `${x}px`;
+    noBtn.style.top = `${y}px`;
   };
   
   const updateText = () => {
@@ -296,15 +329,21 @@ will-change: transform;
   };
   
   /* ===========================
-     YES BUTTON
+     YES BUTTON (Mobile Audio Fixed)
   =========================== */
-  yesBtn.addEventListener("click", () => {
+  yesBtn.addEventListener("click", async () => {
+    try {
+      song.currentTime = 0;
+      await song.play();
+    } catch (err) {
+      console.log("Audio blocked:", err);
+    }
+  
     flowerSplash();
     modal.classList.remove("hidden");
     modal.classList.add("flex");
     document.body.style.overflow = "hidden";
   
-    song.play();
     startHearts();
     startModalSnow();
   });
@@ -327,17 +366,15 @@ will-change: transform;
   };
   
   /* ===========================
-     MODAL SNOW (ONLY MODAL)
+     MODAL SNOW
   =========================== */
   const startModalSnow = () => {
     if (snowInterval) return;
   
     const snowLayer = document.createElement("div");
-    snowLayer.id = "snowLayer";
     snowLayer.style.position = "absolute";
     snowLayer.style.inset = 0;
     snowLayer.style.pointerEvents = "none";
-    snowLayer.style.zIndex = 0;
     modal.appendChild(snowLayer);
   
     const particles = ["❄️", "💕", "🌸"];
@@ -347,29 +384,27 @@ will-change: transform;
       flake.textContent =
         particles[Math.floor(Math.random() * particles.length)];
   
-      const depth = Math.random();
-      const size = 12 + depth * 18;
-      const duration = 6 - depth * 3;
+      const size = 12 + Math.random() * 18;
+      const duration = 3000 + Math.random() * 3000;
   
       flake.style.position = "absolute";
       flake.style.left = Math.random() * 100 + "%";
       flake.style.top = "-30px";
       flake.style.fontSize = size + "px";
-      flake.style.opacity = 0.4 + depth * 0.6;
   
       snowLayer.appendChild(flake);
   
       flake.animate(
         [{ transform: "translateY(0)" }, { transform: "translateY(110vh)" }],
-        { duration: duration * 1000, easing: "linear" }
+        { duration, easing: "linear" }
       );
   
-      setTimeout(() => flake.remove(), duration * 1000 + 500);
+      setTimeout(() => flake.remove(), duration + 500);
     }, 180);
   };
   
   /* ===========================
-     CARD STACK (SMOOTHER DESKTOP DRAG)
+     CARD STACK
   =========================== */
   let cards = [...stack.children];
   const SWIPE_DISTANCE = 90;
@@ -407,6 +442,7 @@ will-change: transform;
   
     card.addEventListener("pointermove", e => {
       if (!dragging) return;
+  
       const now = Date.now();
       velocity = (e.clientX - lastX) / (now - lastTime || 1);
       lastX = e.clientX;
@@ -424,13 +460,15 @@ will-change: transform;
     dragging = false;
     const move = lastX - startX;
     const flick =
-      Math.abs(move) > SWIPE_DISTANCE || Math.abs(velocity) > FLICK_VELOCITY;
+      Math.abs(move) > SWIPE_DISTANCE ||
+      Math.abs(velocity) > FLICK_VELOCITY;
   
     card.style.transition = "transform .45s cubic-bezier(.22,.61,.36,1)";
   
     if (flick) {
       const dir = move > 0 ? 1 : -1;
-      card.style.transform = `translateX(${dir * (innerWidth + 200)}px) rotate(${dir * 30}deg)`;
+      card.style.transform =
+        `translateX(${dir * (innerWidth + 200)}px) rotate(${dir * 30}deg)`;
   
       setTimeout(() => {
         stack.appendChild(card);
@@ -447,7 +485,7 @@ will-change: transform;
   attachSwipe(cards[0]);
   
   /* ===========================
-     FLOWER SPLASH (LONGER)
+     FLOWER SPLASH
   =========================== */
   const flowerSplash = () => {
     const end = Date.now() + 2800;
@@ -459,12 +497,12 @@ will-change: transform;
         origin: { x: Math.random() },
         colors: ["#ff69b4", "#ff1493", "#ffd1dc", "#fff"]
       });
+  
       if (Date.now() < end) requestAnimationFrame(frame);
     })();
   };
-   
-
-</script>
+  </script>
+  
 
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </body>
